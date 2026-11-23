@@ -1,0 +1,316 @@
+# Lomeza Announcements
+## Initial Product Requirements Document
+
+**Project:** Lomeza Announcements  
+**Status:** Initial requirements draft  
+**Platform:** Internal company communications platform
+
+---
+
+## 1. Project Overview
+
+Lomeza Announcements will serve as a central internal communications platform for Lomeza Mining Services.
+
+Its purpose is to provide employees with a reliable way to receive company information, management announcements, operational updates, safety communications, events and important company documents.
+
+The platform will support multiple communication channels, including:
+
+- Web-based employee portal.
+- Email notifications.
+- Digital noticeboards displayed on workplace screens.
+
+The system should accommodate employees across different company sites, departments and organisational roles.
+
+The platform should be designed to support future expansion without requiring major changes to its underlying architecture.
+
+## 2. Supported Content Types
+
+The platform must support:
+
+| Content type | Description |
+|---|---|
+| Company announcements | General company communications and updates. |
+| Management notices | Official communications from company management. |
+| HR communications | Employee-related information, policies and notices. |
+| Safety communications | Workplace safety information and notices. |
+| Operational updates | Site-specific and company-wide operational information. |
+| Company events | Events, meetings, celebrations and scheduled activities. |
+| Company documents | Policies, procedures, forms and downloadable resources. |
+| Toolbox talks | Safety briefings, supporting material and attendance records. |
+
+Content should support appropriate formatting and attachments, including images, PDFs and other relevant documents.
+
+## 3. User Roles and Publishing Permissions
+
+Management and authorised administrators will be permitted to publish announcements.
+
+The platform must support permission-based publishing.
+
+### Proposed roles
+
+- Super Administrator
+- Administrator
+- Management
+- Communications
+- Site Management
+- Supervisor
+- Employee
+
+These are proposed roles and will require confirmation.
+
+### Publishing permissions
+
+The platform must support two publishing workflows:
+
+**Direct publishing**
+
+Authorised users with permission to publish independently can publish announcements without requiring additional approval.
+
+**Approval-based publishing**
+
+Authors without direct publishing permission must submit announcements for approval before publication.
+
+The approval requirement must be determined by the author's permissions rather than assuming that every announcement requires approval.
+
+The platform must retain information about who created, approved and published each announcement.
+
+## 4. Announcement Configuration
+
+Each announcement should have configurable options controlled by its author, subject to their permissions.
+
+### Content settings
+
+- Announcement title.
+- Announcement body.
+- Category.
+- Priority.
+- Featured status.
+- Attachments.
+- Publication date and time.
+- Expiration date and time.
+- Target audience.
+
+### Distribution settings
+
+Authors should be able to select the applicable distribution channels:
+
+- Employee web portal.
+- Email notifications.
+- Digital noticeboards.
+
+An announcement should not automatically be distributed through every channel unless the author selects those channels or an applicable organisational default is configured.
+
+### Interaction settings
+
+Authors should be able to enable or disable the following features independently for each announcement:
+
+| Feature | Behaviour |
+|---|---|
+| Acknowledgement tracking | Records when an employee opens the announcement. |
+| Comments | Allows employees to comment on the announcement. |
+| Reactions | Allows employees to react to the announcement. |
+
+These settings should be configurable when creating or editing an announcement.
+
+The platform must respect the author's permissions and any organisational restrictions.
+
+## 5. Automatic Acknowledgement and Read Receipts
+
+Acknowledgement tracking must function as an automatic read receipt.
+
+Employees must not be required to click a separate "Acknowledged" button.
+
+### Expected behaviour
+
+1. An employee receives an announcement.
+2. The employee opens the announcement.
+3. The system automatically records the acknowledgement.
+4. The system stores the employee's identity and the date and time of the first acknowledgement.
+5. The announcement author or an authorised administrator can view acknowledgement statistics.
+
+### Important implementation rules
+
+- Opening the announcement detail should trigger acknowledgement.
+- Merely displaying an announcement in the feed must not trigger acknowledgement.
+- Each employee should have one acknowledgement record per announcement.
+- Reopening an announcement must not create duplicate acknowledgement records.
+- The original acknowledgement timestamp should be preserved.
+- Acknowledgement tracking must be optional per announcement.
+
+### Reporting
+
+Authorised users should be able to view:
+
+- Total employees targeted.
+- Number of employees who have opened the announcement.
+- Number of employees who have not opened it.
+- Acknowledgement percentage.
+- Individual acknowledgement records and timestamps.
+
+The system should distinguish between an announcement being delivered, opened and acknowledged where channel-specific delivery information is available.
+
+**Note:** An automatic acknowledgement confirms that the announcement was opened. It does not prove that the employee read or understood every word.
+
+## 6. Employee Interaction
+
+Employees should be able to interact with announcements when the author enables the applicable features.
+
+### Comments
+
+- Employees can submit comments.
+- Comments should identify their author and creation timestamp.
+- Authors and authorised administrators should be able to moderate comments.
+- Comments should be associated with their original announcement.
+
+### Reactions
+
+- Employees can react to announcements.
+- The system should prevent duplicate identical reactions from the same employee.
+- Reaction counts should be visible where reactions are enabled.
+
+### Acknowledgements
+
+- Automatically recorded when an employee opens an announcement.
+- No separate acknowledgement button.
+- Visible to authorised users through reporting.
+
+## 7. Employee Accounts and Authentication
+
+Employee accounts must be linked to existing Lomeza company email addresses.
+
+The platform must not operate as an unrestricted public registration service.
+
+### Proposed account creation process
+
+1. An authorised administrator creates or imports an employee profile.
+2. The employee's existing company email address is associated with the profile.
+3. An invitation is sent to that address.
+4. The employee verifies ownership of the email address.
+5. The employee completes account setup.
+6. The account is linked to the employee profile.
+
+Supabase Auth will manage authentication.
+
+Employee profiles will contain relevant organisational information, including:
+
+- Employee name.
+- Company email address.
+- Employee number, where applicable.
+- Assigned site.
+- Assigned department.
+- Assigned platform role.
+- Account status.
+
+## 8. Organisation Structure and Audience Targeting
+
+The platform must support communication across multiple company sites and departments.
+
+Proposed initial sites:
+
+- Head Office.
+- Kalagadi.
+- Sundra.
+- Devon.
+
+Announcements must support targeting based on:
+
+- Entire company.
+- Individual sites.
+- Departments.
+- Employee roles.
+- Combinations of the above.
+
+The system should ensure that employees only receive announcements intended for their assigned audience.
+
+## 9. Digital Noticeboards
+
+The platform must support displaying selected announcements on workplace screens.
+
+Digital noticeboards should have a dedicated display interface.
+
+Proposed functionality:
+
+- Display published announcements.
+- Display images and posters.
+- Rotate through selected announcements.
+- Support scheduled content.
+- Allow authorised administrators to manage screens and playlists.
+- Restrict the display interface from accessing administrative functionality.
+
+## 10. Company Documents and Events
+
+The platform must support company documents and event-related communications.
+
+Documents should support categorisation, attachments and appropriate access restrictions.
+
+Events should support:
+
+- Event title and description.
+- Date and time.
+- Location.
+- Target audience.
+- Supporting attachments.
+- Attendance tracking where required.
+
+Toolbox talks should support safety-related content and attendance records.
+
+## 11. Administration, Security and Auditability
+
+The platform must implement role-based permissions and database-level access restrictions.
+
+Security requirements:
+
+- Supabase Row Level Security.
+- Restricted employee registration.
+- Controlled publishing permissions.
+- Protected administrative functionality.
+- Restricted access to confidential documents.
+- Secure attachment storage.
+- Site and department-based access controls.
+
+The system must maintain audit records for important actions, including:
+
+- Announcement creation.
+- Announcement modification.
+- Approval decisions.
+- Publication and archival.
+- Changes to employee permissions.
+- Administrative changes.
+
+## 12. Proposed Initial Development Scope
+
+The initial implementation should focus on:
+
+1. Supabase authentication.
+2. Employee profiles.
+3. Sites and departments.
+4. Roles and permissions.
+5. Announcement categories.
+6. Announcement creation and management.
+7. Audience targeting.
+8. Approval and publishing workflows.
+9. Email and portal distribution.
+10. Automatic acknowledgement tracking.
+11. Comments and reactions.
+12. Basic administration and audit logging.
+
+Digital noticeboards, advanced event management and toolbox talk management can be implemented as subsequent modules, while ensuring the initial architecture accommodates them.
+
+## 13. Outstanding Management Decisions
+
+The following matters require confirmation before the final database schema and detailed implementation are approved:
+
+- Final employee roles and permission definitions.
+- Whether roles are global, site-specific or both.
+- Whether departments are shared across sites.
+- Which announcement categories require approval.
+- Whether confidential HR communications are required.
+- Which employees may create and manage digital noticeboards.
+- Whether employees should receive email notifications for every announcement or only selected categories and priorities.
+- Whether comment moderation is required.
+- Whether employees without individual accounts will access information exclusively through physical or digital noticeboards.
+- Whether event attendance and toolbox talk attendance require formal reporting.
+
+---
+
+**End of initial requirements draft.**
