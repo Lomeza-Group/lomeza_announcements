@@ -14,12 +14,19 @@ import { Dashboard } from '../features/dashboard/Dashboard'
 import { useEmployees } from '../features/employees/employeesContext'
 import { EmployeesProvider } from '../features/employees/EmployeesProvider'
 import { LocationsProvider } from '../features/locations/LocationsProvider'
-import { canAccessAdministration, canManageAnnouncements } from '../utils/roles'
+import {
+  canAccessAdministration,
+  canAccessEmployeeOverview,
+  canManageAnnouncements,
+} from '../utils/roles'
 import { VIEW_TITLES } from './navigation'
 import type { AppView } from './navigation'
 
 function isViewAllowed(view: AppView, employee: EmployeeProfile): boolean {
   switch (view) {
+    case 'dashboard':
+    case 'acknowledgements':
+      return canAccessEmployeeOverview(employee)
     case 'manage':
     case 'create':
       return canManageAnnouncements(employee)
@@ -48,11 +55,11 @@ function AppShell({ employee }: { employee: EmployeeProfile }) {
   const { getEmployeeById } = useEmployees()
   const effectiveEmployee = getEmployeeById(employee.id) ?? employee
 
-  const [view, setView] = useState<AppView>('dashboard')
+  const [view, setView] = useState<AppView>('announcements')
   const [collapsed, setCollapsed] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const activeView = isViewAllowed(view, effectiveEmployee) ? view : 'dashboard'
+  const activeView = isViewAllowed(view, effectiveEmployee) ? view : 'announcements'
 
   const navigate = (next: AppView) => {
     setView(next)

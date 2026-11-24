@@ -1,6 +1,10 @@
 import { X } from 'lucide-react'
 import type { EmployeeProfile } from '../../types/auth'
-import { canAccessAdministration, canManageAnnouncements } from '../../utils/roles'
+import {
+  canAccessAdministration,
+  canAccessEmployeeOverview,
+  canManageAnnouncements,
+} from '../../utils/roles'
 import { ADMIN_NAV, MAIN_NAV, MANAGEMENT_NAV } from '../../layouts/navigation'
 import type { AppView, NavItem } from '../../layouts/navigation'
 import { BrandLockup } from '../auth/Brand'
@@ -20,8 +24,13 @@ export function Sidebar({
   open,
   onClose,
 }: SidebarProps) {
+  const mainItems = canAccessEmployeeOverview(employee)
+    ? MAIN_NAV
+    : MAIN_NAV.filter(
+        (item) => item.view !== 'dashboard' && item.view !== 'acknowledgements',
+      )
   const groups: { title: string; items: NavItem[] }[] = [
-    { title: 'Main', items: MAIN_NAV },
+    { title: 'Main', items: mainItems },
   ]
 
   if (canManageAnnouncements(employee)) {
