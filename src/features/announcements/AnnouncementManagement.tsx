@@ -17,6 +17,7 @@ import type { EmployeeProfile } from '../../types/auth'
 import { formatDate } from '../../utils/format'
 import { canManageAnnouncements } from '../../utils/roles'
 import { useLocations } from '../locations/locationsContext'
+import { AnnouncementCover } from './AnnouncementCover'
 import { AnnouncementDetail } from './AnnouncementDetail'
 import { AnnouncementEditor } from './AnnouncementEditor'
 import { useAnnouncements } from './announcementsContext'
@@ -232,43 +233,54 @@ export function AnnouncementManagement({
           {filtered.map((announcement) => (
             <article className="management-row" key={announcement.id}>
               <div className="management-row-main">
-                <div className="management-row-top">
-                  <h3>{announcement.title}</h3>
-                  <StatusBadge status={announcement.status} />
-                </div>
+                <div className="management-row-with-thumb">
+                  <AnnouncementCover
+                    variant="thumb"
+                    category={announcement.category}
+                    coverImagePreviewUrl={announcement.coverImagePreviewUrl}
+                    coverImageAlt={announcement.coverImageAlt}
+                  />
 
-                <div className="management-row-badges">
-                  <span className="announcement-category">
-                    {announcement.category}
-                  </span>
-                  <span
-                    className={`priority-badge priority-${announcement.priority}`}
-                  >
-                    {PRIORITY_LABELS[announcement.priority]}
-                  </span>
-                  <span className="management-audience">
-                    <MapPin aria-hidden="true" />
-                    {getAudienceLabel(announcement.targetLocations)}
-                  </span>
-                  {announcement.attachments.length > 0 && (
-                    <span className="management-audience">
-                      <Paperclip aria-hidden="true" />
-                      {announcement.attachments.length}{' '}
-                      {announcement.attachments.length === 1
-                        ? 'attachment'
-                        : 'attachments'}
-                    </span>
-                  )}
-                </div>
+                  <div className="management-row-content">
+                    <div className="management-row-top">
+                      <h3>{announcement.title}</h3>
+                      <StatusBadge status={announcement.status} />
+                    </div>
 
-                <div className="management-row-meta">
-                  <span>
-                    Published:{' '}
-                    {announcement.publishedAt
-                      ? formatDate(announcement.publishedAt)
-                      : 'Not published'}
-                  </span>
-                  <span>Updated: {formatDate(announcement.updatedAt)}</span>
+                    <div className="management-row-badges">
+                      <span className="announcement-category">
+                        {announcement.category}
+                      </span>
+                      <span
+                        className={`priority-badge priority-${announcement.priority}`}
+                      >
+                        {PRIORITY_LABELS[announcement.priority]}
+                      </span>
+                      <span className="management-audience">
+                        <MapPin aria-hidden="true" />
+                        {getAudienceLabel(announcement.targetLocations)}
+                      </span>
+                      {announcement.attachments.length > 0 && (
+                        <span className="management-audience">
+                          <Paperclip aria-hidden="true" />
+                          {announcement.attachments.length}{' '}
+                          {announcement.attachments.length === 1
+                            ? 'attachment'
+                            : 'attachments'}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="management-row-meta">
+                      <span>
+                        Published:{' '}
+                        {announcement.publishedAt
+                          ? formatDate(announcement.publishedAt)
+                          : 'Not published'}
+                      </span>
+                      <span>Updated: {formatDate(announcement.updatedAt)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

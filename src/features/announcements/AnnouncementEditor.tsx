@@ -13,6 +13,8 @@ import {
   MAX_ATTACHMENTS,
   validateAttachmentFile,
 } from './attachmentUtils'
+import { CoverImageUploader } from './CoverImageUploader'
+import { validateCoverFile } from './coverImage'
 import { useAnnouncements } from './announcementsContext'
 import type {
   Announcement,
@@ -76,6 +78,19 @@ export function AnnouncementEditor({
     () => initial?.attachments ?? [],
   )
   const [attachmentErrors, setAttachmentErrors] = useState<string[]>([])
+  const [coverImagePath, setCoverImagePath] = useState<string | null>(
+    initial?.coverImagePath ?? null,
+  )
+  const [coverImageAlt, setCoverImageAlt] = useState(
+    initial?.coverImageAlt ?? '',
+  )
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(
+    initial?.coverImageFile ?? null,
+  )
+  const [coverImagePreviewUrl, setCoverImagePreviewUrl] = useState<
+    string | null
+  >(initial?.coverImagePreviewUrl ?? null)
+  const [coverError, setCoverError] = useState<string | null>(null)
   const sessionUrlsRef = useRef<Set<string>>(new Set())
   const savedRef = useRef(false)
 
@@ -211,6 +226,46 @@ export function AnnouncementEditor({
     )
   }
 
+  const handleCoverSelect = (file: File) => {
+    const validationError = validateCoverFile(file)
+
+    if (validationError) {
+      setCoverError(validationError)
+      return
+    }
+
+    if (
+      coverImagePreviewUrl &&
+      sessionUrlsRef.current.has(coverImagePreviewUrl)
+    ) {
+      URL.revokeObjectURL(coverImagePreviewUrl)
+      sessionUrlsRef.current.delete(coverImagePreviewUrl)
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    sessionUrlsRef.current.add(previewUrl)
+    setCoverImagePreviewUrl(previewUrl)
+    setCoverImageFile(file)
+    setCoverImagePath(null)
+    setCoverError(null)
+  }
+
+  const handleCoverRemove = () => {
+    if (
+      coverImagePreviewUrl &&
+      sessionUrlsRef.current.has(coverImagePreviewUrl)
+    ) {
+      URL.revokeObjectURL(coverImagePreviewUrl)
+      sessionUrlsRef.current.delete(coverImagePreviewUrl)
+    }
+
+    setCoverImagePreviewUrl(null)
+    setCoverImageFile(null)
+    setCoverImagePath(null)
+    setCoverImageAlt('')
+    setCoverError(null)
+  }
+
   const submit = (status?: 'draft' | 'published') => {
     const nextErrors: EditorErrors = {}
 
@@ -234,10 +289,18 @@ export function AnnouncementEditor({
     setErrors({})
     setIsSaving(true)
 
+    const draft: AnnouncementDraft = {
+      ...form,
+      coverImagePath,
+      coverImageAlt: coverImageAlt.trim() || null,
+      coverImageFile,
+      coverImagePreviewUrl,
+    }
+
     if (initial) {
-      updateAnnouncement(initial.id, form, status, attachments)
+      updateAnnouncement(initial.id, draft, status, attachments)
     } else {
-      createAnnouncement(form, employee.full_name, status, attachments)
+      createAnnouncement(draft, employee.full_name, status, attachments)
     }
 
     savedRef.current = true
@@ -334,6 +397,18 @@ export function AnnouncementEditor({
               </select>
             </div>
           </div>
+        </section>
+
+        <section className="editor-section">
+          <h2>Announcement Cover Image</h2>
+          <CoverImageUploader
+            previewUrl={coverImagePreviewUrl}
+            alt={coverImageAlt}
+            error={coverError}
+            onSelectFile={handleCoverSelect}
+            onRemove={handleCoverRemove}
+            onAltChange={setCoverImageAlt}
+          />
         </section>
 
         <section className="editor-section">

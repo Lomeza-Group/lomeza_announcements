@@ -1,5 +1,5 @@
 import { ALL_LOCATIONS } from '../locations/locationTypes'
-import type { Announcement } from './types'
+import type { AnnouncementSeed } from './types'
 
 function daysAgo(days: number, hour = 9): string {
   const date = new Date()
@@ -8,7 +8,18 @@ function daysAgo(days: number, hour = 9): string {
   return date.toISOString()
 }
 
-export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
+/** Small inline SVG cover (no external requests). */
+function svgCover(from: string, to: string, shape: 'circles' | 'waves' | 'grid'): string {
+  const shapes = {
+    circles: `<circle cx="1280" cy="180" r="260" fill="#fff" fill-opacity=".10"/><circle cx="1100" cy="720" r="180" fill="#fff" fill-opacity=".08"/><circle cx="260" cy="760" r="220" fill="#fff" fill-opacity=".07"/>`,
+    waves: `<path d="M0 620 C 300 520 500 760 800 640 S 1300 520 1600 640 V900 H0Z" fill="#fff" fill-opacity=".10"/><path d="M0 720 C 300 640 560 860 880 740 S 1320 660 1600 760 V900 H0Z" fill="#fff" fill-opacity=".08"/>`,
+    grid: `<g stroke="#fff" stroke-opacity=".10" stroke-width="2">${Array.from({ length: 16 }, (_, i) => `<path d="M${i * 100} 0V900"/>`).join('')}${Array.from({ length: 9 }, (_, i) => `<path d="M0 ${i * 100}H1600"/>`).join('')}</g>`,
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs><rect width="1600" height="900" fill="url(#g)"/>${shapes[shape]}</svg>`
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
+
+export const mockAnnouncements: AnnouncementSeed[] = [
   {
     id: 'ann-001',
     title: 'Quarterly Safety Briefing — November',
@@ -17,6 +28,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'Safety',
     priority: 'urgent',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: svgCover('#7c2d12', '#f59e0b', 'waves'),
     acknowledgementEnabled: true,
     commentsEnabled: false,
     reactionsEnabled: false,
@@ -35,6 +49,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'General',
     priority: 'normal',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: svgCover('#1e3a8a', '#38bdf8', 'circles'),
     acknowledgementEnabled: false,
     commentsEnabled: true,
     reactionsEnabled: true,
@@ -53,6 +70,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'IT',
     priority: 'high',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: null,
     acknowledgementEnabled: false,
     commentsEnabled: false,
     reactionsEnabled: false,
@@ -71,6 +91,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'Human Resources',
     priority: 'normal',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: null,
     acknowledgementEnabled: true,
     commentsEnabled: false,
     reactionsEnabled: false,
@@ -89,6 +112,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'Operations',
     priority: 'high',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: svgCover('#064e3b', '#34d399', 'grid'),
     acknowledgementEnabled: true,
     commentsEnabled: false,
     reactionsEnabled: false,
@@ -107,6 +133,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'Maintenance',
     priority: 'normal',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: null,
     acknowledgementEnabled: false,
     commentsEnabled: false,
     reactionsEnabled: false,
@@ -125,6 +154,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'General',
     priority: 'low',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: null,
     acknowledgementEnabled: false,
     commentsEnabled: true,
     reactionsEnabled: true,
@@ -143,6 +175,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'Operations',
     priority: 'normal',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: null,
     acknowledgementEnabled: true,
     commentsEnabled: false,
     reactionsEnabled: false,
@@ -161,6 +196,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'Safety',
     priority: 'urgent',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: null,
     acknowledgementEnabled: true,
     commentsEnabled: false,
     reactionsEnabled: false,
@@ -179,6 +217,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'General',
     priority: 'low',
     status: 'published',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: null,
     acknowledgementEnabled: false,
     commentsEnabled: false,
     reactionsEnabled: false,
@@ -197,6 +238,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'Human Resources',
     priority: 'high',
     status: 'draft',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: null,
     acknowledgementEnabled: false,
     commentsEnabled: false,
     reactionsEnabled: false,
@@ -215,6 +259,9 @@ export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
     category: 'Safety',
     priority: 'normal',
     status: 'archived',
+    coverImagePath: null,
+    coverImageAlt: null,
+    coverImagePreviewUrl: null,
     acknowledgementEnabled: true,
     commentsEnabled: false,
     reactionsEnabled: false,

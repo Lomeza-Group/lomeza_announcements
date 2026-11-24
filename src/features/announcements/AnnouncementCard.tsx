@@ -16,6 +16,7 @@ import {
   getExcerpt,
 } from '../../utils/format'
 import { useLocations } from '../locations/locationsContext'
+import { AnnouncementCover } from './AnnouncementCover'
 import { AttachmentPreview } from './AttachmentPreview'
 import { useAnnouncements } from './announcementsContext'
 import type { Announcement } from './types'
@@ -44,6 +45,7 @@ export function AnnouncementCard({
     (item) => item.employee_id === employee.id,
   )
   const acknowledged = requiresAcknowledgement && Boolean(ackRecord)
+  const hasCover = Boolean(announcement.coverImagePreviewUrl)
   const panelId = `announcement-panel-${announcement.id}`
 
   const toggleExpanded = () => {
@@ -81,8 +83,17 @@ export function AnnouncementCard({
     <article
       className={`announcement-card${
         announcement.priority === 'urgent' ? ' is-urgent' : ''
-      }${isExpanded ? ' is-expanded' : ''}`}
+      }${isExpanded ? ' is-expanded' : ''}${hasCover ? ' has-cover' : ''}`}
     >
+      {hasCover && (
+        <AnnouncementCover
+          category={announcement.category}
+          coverImagePreviewUrl={announcement.coverImagePreviewUrl}
+          coverImageAlt={announcement.coverImageAlt}
+          variant="card"
+        />
+      )}
+
       <div className="announcement-card-top">
         <span className="announcement-category">{announcement.category}</span>
         <div className="announcement-card-top-right">

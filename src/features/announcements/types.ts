@@ -37,7 +37,16 @@ export interface Announcement {
   read: boolean
   updatedAt: string
   attachments: AnnouncementAttachment[]
+  coverImagePath: string | null
+  coverImageAlt: string | null
+  coverImageFile?: File | null
+  coverImagePreviewUrl?: string | null
 }
+
+export type AnnouncementSeed = Omit<
+  Announcement,
+  'attachments' | 'coverImageFile'
+>
 
 export interface AnnouncementDraft {
   title: string
@@ -48,6 +57,10 @@ export interface AnnouncementDraft {
   commentsEnabled: boolean
   reactionsEnabled: boolean
   targetLocations: string[]
+  coverImagePath?: string | null
+  coverImageAlt?: string | null
+  coverImageFile?: File | null
+  coverImagePreviewUrl?: string | null
 }
 
 export interface AnnouncementAcknowledgement {

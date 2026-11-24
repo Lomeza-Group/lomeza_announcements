@@ -41,6 +41,7 @@ export function AnnouncementsProvider({
     mockAnnouncements.map((announcement) => ({
       ...announcement,
       attachments: [],
+      coverImageFile: null,
     })),
   )
   const [acknowledgements, setAcknowledgements] = useState<
@@ -77,6 +78,10 @@ export function AnnouncementsProvider({
           ...attachment,
           announcementId: id,
         })),
+        coverImagePath: draft.coverImagePath ?? null,
+        coverImageAlt: draft.coverImageAlt ?? null,
+        coverImageFile: draft.coverImageFile ?? null,
+        coverImagePreviewUrl: draft.coverImagePreviewUrl ?? null,
       }
 
       setAnnouncements((current) => [announcement, ...current])
@@ -117,6 +122,20 @@ export function AnnouncementsProvider({
         }
       }
 
+      if (
+        currentAnnouncement &&
+        draft.coverImagePreviewUrl !== undefined
+      ) {
+        const nextCoverPreview = draft.coverImagePreviewUrl ?? null
+
+        if (
+          currentAnnouncement.coverImagePreviewUrl &&
+          currentAnnouncement.coverImagePreviewUrl !== nextCoverPreview
+        ) {
+          URL.revokeObjectURL(currentAnnouncement.coverImagePreviewUrl)
+        }
+      }
+
       setAnnouncements((current) =>
         current.map((announcement) => {
           if (announcement.id !== id) {
@@ -135,6 +154,22 @@ export function AnnouncementsProvider({
                 : announcement.publishedAt,
             updatedAt: now,
             attachments: nextAttachments ?? announcement.attachments,
+            coverImagePath:
+              draft.coverImagePath !== undefined
+                ? draft.coverImagePath
+                : announcement.coverImagePath,
+            coverImageAlt:
+              draft.coverImageAlt !== undefined
+                ? draft.coverImageAlt
+                : announcement.coverImageAlt,
+            coverImageFile:
+              draft.coverImageFile !== undefined
+                ? draft.coverImageFile
+                : (announcement.coverImageFile ?? null),
+            coverImagePreviewUrl:
+              draft.coverImagePreviewUrl !== undefined
+                ? draft.coverImagePreviewUrl
+                : (announcement.coverImagePreviewUrl ?? null),
           }
         }),
       )
@@ -155,6 +190,10 @@ export function AnnouncementsProvider({
           if (attachment.previewUrl) {
             URL.revokeObjectURL(attachment.previewUrl)
           }
+        }
+
+        if (announcement.coverImagePreviewUrl) {
+          URL.revokeObjectURL(announcement.coverImagePreviewUrl)
         }
       }
     }
