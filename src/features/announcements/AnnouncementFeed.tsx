@@ -4,10 +4,9 @@ import type { EmployeeProfile } from '../../types/auth'
 import { useEmployees } from '../employees/employeesContext'
 import { useLocations } from '../locations/locationsContext'
 import { AnnouncementCard } from './AnnouncementCard'
-import { AnnouncementDetail } from './AnnouncementDetail'
 import { useAnnouncements } from './announcementsContext'
 import { CATEGORIES, PRIORITIES } from './types'
-import type { Announcement, AnnouncementPriority } from './types'
+import type { AnnouncementPriority } from './types'
 
 const PRIORITY_FILTERS: ('all' | AnnouncementPriority)[] = [
   'all',
@@ -25,7 +24,6 @@ export function AnnouncementFeed({
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [priority, setPriority] = useState<'all' | AnnouncementPriority>('all')
-  const [selected, setSelected] = useState<Announcement | null>(null)
 
   const currentLocationId =
     getEmployeeById(employee.id)?.location_id ?? employee.location_id
@@ -58,7 +56,14 @@ export function AnnouncementFeed({
           new Date(b.publishedAt ?? b.updatedAt).getTime() -
           new Date(a.publishedAt ?? a.updatedAt).getTime(),
       )
-  }, [announcements, currentLocationId, query, category, priority, isEmployeeTargeted])
+  }, [
+    announcements,
+    currentLocationId,
+    query,
+    category,
+    priority,
+    isEmployeeTargeted,
+  ])
 
   return (
     <div>
@@ -114,7 +119,7 @@ export function AnnouncementFeed({
               key={announcement.id}
               announcement={announcement}
               employee={employee}
-              onOpen={setSelected}
+              expandable
             />
           ))}
         </div>
@@ -125,12 +130,6 @@ export function AnnouncementFeed({
           <p>Try adjusting your search or filters.</p>
         </div>
       )}
-
-      <AnnouncementDetail
-        announcement={selected}
-        employee={employee}
-        onClose={() => setSelected(null)}
-      />
     </div>
   )
 }

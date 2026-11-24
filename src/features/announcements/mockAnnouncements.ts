@@ -8,7 +8,7 @@ function daysAgo(days: number, hour = 9): string {
   return date.toISOString()
 }
 
-export const mockAnnouncements: Announcement[] = [
+export const mockAnnouncements: Array<Omit<Announcement, 'attachments'>> = [
   {
     id: 'ann-001',
     title: 'Quarterly Safety Briefing — November',

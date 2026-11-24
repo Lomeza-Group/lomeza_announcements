@@ -4,6 +4,7 @@ import {
   Eye,
   Inbox,
   MapPin,
+  Paperclip,
   Pencil,
   Plus,
   RotateCcw,
@@ -249,6 +250,15 @@ export function AnnouncementManagement({
                     <MapPin aria-hidden="true" />
                     {getAudienceLabel(announcement.targetLocations)}
                   </span>
+                  {announcement.attachments.length > 0 && (
+                    <span className="management-audience">
+                      <Paperclip aria-hidden="true" />
+                      {announcement.attachments.length}{' '}
+                      {announcement.attachments.length === 1
+                        ? 'attachment'
+                        : 'attachments'}
+                    </span>
+                  )}
                 </div>
 
                 <div className="management-row-meta">

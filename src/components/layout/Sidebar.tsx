@@ -1,5 +1,8 @@
-import { X } from 'lucide-react'
+import { useState } from 'react'
+import { LogOut, X } from 'lucide-react'
 import type { EmployeeProfile } from '../../types/auth'
+import { useAuth } from '../../hooks/useAuth'
+import { canAccessAdministration, canManageAnnouncements } from '../../utils/roles'
 import {
   canAccessAdministration,
   canAccessEmployeeOverview,
@@ -24,6 +27,22 @@ export function Sidebar({
   open,
   onClose,
 }: SidebarProps) {
+  const { logout } = useAuth()
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const [signOutError, setSignOutError] = useState<string | null>(null)
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true)
+    setSignOutError(null)
+
+    const result = await logout()
+
+    if (result) {
+      setSignOutError(result)
+      setIsSigningOut(false)
+    }
+  }
+
   const mainItems = canAccessEmployeeOverview(employee)
     ? MAIN_NAV
     : MAIN_NAV.filter(
@@ -80,7 +99,25 @@ export function Sidebar({
         ))}
       </nav>
 
-      <div className="sidebar-footer">Lomeza Mining Services</div>
+      <div className="sidebar-footer">
+        <p className="sidebar-footer-text">Lomeza Mining Services</p>
+        <button
+          type="button"
+          className="sidebar-signout"
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+        >
+          <LogOut aria-hidden="true" />
+          <span className="sidebar-item-label">
+            {isSigningOut ? 'Signing out…' : 'Sign out'}
+          </span>
+        </button>
+        {signOutError && (
+          <p className="sidebar-signout-error" role="alert">
+            {signOutError}
+          </p>
+        )}
+      </div>
     </aside>
   )
 }

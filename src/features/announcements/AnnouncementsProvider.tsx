@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { EmployeeProfile } from '../../types/auth'
 import { useEmployees } from '../employees/employeesContext'
@@ -13,8 +13,10 @@ import { mockAcknowledgements } from './mockAcknowledgements'
 import { mockAnnouncements } from './mockAnnouncements'
 import { isExpired } from './targeting'
 import type {
+  AcknowledgeResult,
   Announcement,
   AnnouncementAcknowledgement,
+  AnnouncementAttachment,
   AnnouncementDraft,
   AnnouncementStatus,
 } from './types'
@@ -35,8 +37,12 @@ export function AnnouncementsProvider({
   const { getEmployeeById } = useEmployees()
   const { isEmployeeTargeted } = useLocations()
 
-  const [announcements, setAnnouncements] =
-    useState<Announcement[]>(mockAnnouncements)
+  const [announcements, setAnnouncements] = useState<Announcement[]>(() =>
+    mockAnnouncements.map((announcement) => ({
+      ...announcement,
+      attachments: [],
+    })),
+  )
   const [acknowledgements, setAcknowledgements] = useState<
     AnnouncementAcknowledgement[]
   >(mockAcknowledgements)
@@ -53,6 +59,7 @@ export function AnnouncementsProvider({
       draft: AnnouncementDraft,
       author: string,
       status: AnnouncementStatus = 'draft',
+      attachments: AnnouncementAttachment[] = [],
     ) => {
       const now = new Date().toISOString()
       const id = generateId('ann')
@@ -66,6 +73,10 @@ export function AnnouncementsProvider({
         author,
         read: true,
         updatedAt: now,
+        attachments: attachments.map((attachment) => ({
+          ...attachment,
+          announcementId: id,
+        })),
       }
 
       setAnnouncements((current) => [announcement, ...current])
@@ -75,8 +86,36 @@ export function AnnouncementsProvider({
   )
 
   const updateAnnouncement = useCallback(
-    (id: string, draft: AnnouncementDraft, status?: AnnouncementStatus) => {
+    (
+      id: string,
+      draft: AnnouncementDraft,
+      status?: AnnouncementStatus,
+      attachments?: AnnouncementAttachment[],
+    ) => {
       const now = new Date().toISOString()
+      const currentAnnouncement = announcements.find(
+        (announcement) => announcement.id === id,
+      )
+      let nextAttachments = currentAnnouncement?.attachments
+
+      if (attachments) {
+        nextAttachments = attachments.map((attachment) => ({
+          ...attachment,
+          announcementId: id,
+        }))
+
+        if (currentAnnouncement) {
+          const keptIds = new Set(
+            nextAttachments.map((attachment) => attachment.id),
+          )
+
+          for (const previous of currentAnnouncement.attachments) {
+            if (!keptIds.has(previous.id) && previous.previewUrl) {
+              URL.revokeObjectURL(previous.previewUrl)
+            }
+          }
+        }
+      }
 
       setAnnouncements((current) =>
         current.map((announcement) => {
@@ -95,12 +134,31 @@ export function AnnouncementsProvider({
                 ? (announcement.publishedAt ?? now)
                 : announcement.publishedAt,
             updatedAt: now,
+            attachments: nextAttachments ?? announcement.attachments,
           }
         }),
       )
     },
-    [],
+    [announcements],
   )
+
+  const announcementsRef = useRef(announcements)
+
+  useEffect(() => {
+    announcementsRef.current = announcements
+  }, [announcements])
+
+  useEffect(() => {
+    return () => {
+      for (const announcement of announcementsRef.current) {
+        for (const attachment of announcement.attachments) {
+          if (attachment.previewUrl) {
+            URL.revokeObjectURL(attachment.previewUrl)
+          }
+        }
+      }
+    }
+  }, [])
 
   const publishAnnouncement = useCallback((id: string) => {
     const now = new Date().toISOString()
@@ -149,21 +207,49 @@ export function AnnouncementsProvider({
   }, [])
 
   const acknowledgeAnnouncement = useCallback(
-    (announcementId: string) => {
+    (announcementId: string): AcknowledgeResult => {
       const announcement = announcements.find(
         (item) => item.id === announcementId,
       )
 
+      if (!announcement) {
+        return { success: false, error: 'Announcement not found.' }
+      }
+
+      if (announcement.status !== 'published') {
+        return {
+          success: false,
+          error: 'Only published announcements can be acknowledged.',
+        }
+      }
+
+      if (!announcement.acknowledgementEnabled) {
+        return {
+          success: false,
+          error: 'This announcement does not require acknowledgement.',
+        }
+      }
+
       if (
-        !announcement ||
-        announcement.status !== 'published' ||
-        !announcement.acknowledgementEnabled ||
         !isEmployeeTargeted(
           announcement.targetLocations,
           resolveEmployeeLocationId(employee.id),
         )
       ) {
-        return
+        return {
+          success: false,
+          error: 'You do not have access to acknowledge this announcement.',
+        }
+      }
+
+      const alreadyAcknowledged = acknowledgements.some(
+        (item) =>
+          item.announcement_id === announcementId &&
+          item.employee_id === employee.id,
+      )
+
+      if (alreadyAcknowledged) {
+        return { success: true, error: null }
       }
 
       const now = new Date().toISOString()
@@ -189,8 +275,16 @@ export function AnnouncementsProvider({
           },
         ]
       })
+
+      return { success: true, error: null }
     },
-    [announcements, employee, resolveEmployeeLocationId, isEmployeeTargeted],
+    [
+      announcements,
+      acknowledgements,
+      employee,
+      resolveEmployeeLocationId,
+      isEmployeeTargeted,
+    ],
   )
 
   const hasAcknowledged = useCallback(

@@ -2,6 +2,24 @@ export type AnnouncementPriority = 'low' | 'normal' | 'high' | 'urgent'
 
 export type AnnouncementStatus = 'draft' | 'published' | 'archived'
 
+export interface AcknowledgeResult {
+  success: boolean
+  error: string | null
+}
+
+export interface AnnouncementAttachment {
+  id: string
+  announcementId: string
+  fileName: string
+  fileType: string
+  fileSize: number
+  uploadedBy: string
+  createdAt: string
+  filePath?: string | null
+  file?: File | null
+  previewUrl?: string | null
+}
+
 export interface Announcement {
   id: string
   title: string
@@ -18,6 +36,7 @@ export interface Announcement {
   author: string
   read: boolean
   updatedAt: string
+  attachments: AnnouncementAttachment[]
 }
 
 export interface AnnouncementDraft {
