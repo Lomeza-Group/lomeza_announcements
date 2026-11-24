@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { LogOut, X } from 'lucide-react'
 import type { EmployeeProfile } from '../../types/auth'
 import { useAuth } from '../../hooks/useAuth'
-import { canAccessAdministration, canManageAnnouncements } from '../../utils/roles'
 import {
   canAccessAdministration,
   canAccessEmployeeOverview,
