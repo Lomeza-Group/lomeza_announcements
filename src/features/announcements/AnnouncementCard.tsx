@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import {
   AlertCircle,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   MapPin,
+  Paperclip,
   User,
 } from 'lucide-react'
 import type { EmployeeProfile } from '../../types/auth'
@@ -12,6 +16,7 @@ import {
   getExcerpt,
 } from '../../utils/format'
 import { useLocations } from '../locations/locationsContext'
+import { AttachmentPreview } from './AttachmentPreview'
 import { useAnnouncements } from './announcementsContext'
 import type { Announcement } from './types'
 import { PRIORITY_LABELS } from './types'
@@ -19,30 +24,64 @@ import { PRIORITY_LABELS } from './types'
 interface AnnouncementCardProps {
   announcement: Announcement
   employee: EmployeeProfile
-  acknowledgedAt?: string
-  onOpen?: (announcement: Announcement) => void
+  expandable?: boolean
 }
 
 export function AnnouncementCard({
   announcement,
   employee,
-  acknowledgedAt,
-  onOpen,
+  expandable = false,
 }: AnnouncementCardProps) {
-  const { hasAcknowledged } = useAnnouncements()
+  const { acknowledgeAnnouncement, getAcknowledgements } = useAnnouncements()
   const { getAudienceLabel } = useLocations()
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [ackError, setAckError] = useState<string | null>(null)
 
   const isPublished = announcement.status === 'published'
-  const acknowledged =
-    isPublished &&
-    announcement.acknowledgementEnabled &&
-    hasAcknowledged(announcement.id, employee.id)
+  const requiresAcknowledgement =
+    isPublished && announcement.acknowledgementEnabled
+  const ackRecord = getAcknowledgements(announcement.id).find(
+    (item) => item.employee_id === employee.id,
+  )
+  const acknowledged = requiresAcknowledgement && Boolean(ackRecord)
+  const panelId = `announcement-panel-${announcement.id}`
+
+  const toggleExpanded = () => {
+    if (isExpanded) {
+      setIsExpanded(false)
+      return
+    }
+
+    setIsExpanded(true)
+
+    if (!requiresAcknowledgement || acknowledged) {
+      return
+    }
+
+    const result = acknowledgeAnnouncement(announcement.id)
+
+    if (!result.success) {
+      setAckError(result.error)
+    } else {
+      setAckError(null)
+    }
+  }
+
+  const retryAcknowledgement = () => {
+    const result = acknowledgeAnnouncement(announcement.id)
+
+    if (result.success) {
+      setAckError(null)
+    } else {
+      setAckError(result.error)
+    }
+  }
 
   return (
     <article
       className={`announcement-card${
         announcement.priority === 'urgent' ? ' is-urgent' : ''
-      }`}
+      }${isExpanded ? ' is-expanded' : ''}`}
     >
       <div className="announcement-card-top">
         <span className="announcement-category">{announcement.category}</span>
@@ -70,44 +109,79 @@ export function AnnouncementCard({
           <MapPin aria-hidden="true" />
           {getAudienceLabel(announcement.targetLocations)}
         </span>
+        {announcement.attachments.length > 0 && (
+          <span className="attachment-indicator">
+            <Paperclip aria-hidden="true" />
+            {announcement.attachments.length}
+          </span>
+        )}
       </div>
 
-      {(isPublished && announcement.acknowledgementEnabled) || onOpen ? (
+      {isExpanded && (
+        <div className="announcement-expanded" id={panelId}>
+          <p className="announcement-full-content">{announcement.content}</p>
+
+          {announcement.attachments.length > 0 && (
+            <AttachmentPreview attachments={announcement.attachments} />
+          )}
+
+          {ackError && (
+            <div className="inline-ack-error" role="alert">
+              <span>{ackError}</span>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={retryAcknowledgement}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {(requiresAcknowledgement || expandable) && (
         <div className="announcement-footer">
           <div className="announcement-footer-left">
-            {isPublished &&
-              announcement.acknowledgementEnabled &&
+            {requiresAcknowledgement &&
               (acknowledged ? (
                 <>
                   <span className="ack-indicator is-acknowledged">
                     <CheckCircle2 aria-hidden="true" />
                     Acknowledged
                   </span>
-                  {acknowledgedAt && (
+                  {ackRecord && (
                     <span className="ack-date">
-                      {formatDateTime(acknowledgedAt)}
+                      {formatDateTime(ackRecord.first_opened_at)}
                     </span>
                   )}
                 </>
               ) : (
                 <span className="ack-indicator is-pending">
                   <AlertCircle aria-hidden="true" />
-                  Action required
+                  Acknowledgement required
                 </span>
               ))}
           </div>
 
-          {onOpen && (
+          {expandable && (
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              onClick={() => onOpen(announcement)}
+              onClick={toggleExpanded}
+              aria-expanded={isExpanded}
+              aria-controls={isExpanded ? panelId : undefined}
             >
-              View
+              {isExpanded ? 'See Less' : 'See More'}
+              {isExpanded ? (
+                <ChevronUp aria-hidden="true" />
+              ) : (
+                <ChevronDown aria-hidden="true" />
+              )}
             </button>
           )}
         </div>
-      ) : null}
+      )}
     </article>
   )
 }

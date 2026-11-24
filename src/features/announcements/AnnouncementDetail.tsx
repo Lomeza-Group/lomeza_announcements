@@ -1,17 +1,11 @@
 import { useEffect } from 'react'
-import {
-  CalendarDays,
-  CheckCircle2,
-  MapPin,
-  User,
-  X,
-} from 'lucide-react'
+import { CalendarDays, MapPin, User, X } from 'lucide-react'
 import type { EmployeeProfile } from '../../types/auth'
-import { formatDate, formatDateTime } from '../../utils/format'
+import { formatDate } from '../../utils/format'
 import { canManageAnnouncements } from '../../utils/roles'
 import { useLocations } from '../locations/locationsContext'
 import { AcknowledgementTracking } from './AcknowledgementTracking'
-import { useAnnouncements } from './announcementsContext'
+import { AttachmentPreview } from './AttachmentPreview'
 import { StatusBadge } from './StatusBadge'
 import type { Announcement } from './types'
 import { PRIORITY_LABELS } from './types'
@@ -27,7 +21,6 @@ export function AnnouncementDetail({
   employee,
   onClose,
 }: AnnouncementDetailProps) {
-  const { acknowledgeAnnouncement, getAcknowledgements } = useAnnouncements()
   const { getAudienceLabel } = useLocations()
 
   useEffect(() => {
@@ -48,10 +41,6 @@ export function AnnouncementDetail({
   if (!announcement) {
     return null
   }
-
-  const ackRecord = getAcknowledgements(announcement.id).find(
-    (item) => item.employee_id === employee.id,
-  )
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -105,34 +94,9 @@ export function AnnouncementDetail({
 
         <p className="modal-body">{announcement.content}</p>
 
-        {announcement.status === 'published' &&
-          announcement.acknowledgementEnabled && (
-            <div className="ack-section">
-              {ackRecord ? (
-                <div className="ack-confirmed">
-                  <CheckCircle2 aria-hidden="true" />
-                  <div>
-                    <span className="ack-confirmed-label">Acknowledged</span>
-                    <span className="ack-confirmed-date">
-                      {formatDateTime(ackRecord.first_opened_at)}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="ack-pending">
-                  <p>This announcement requires your acknowledgement.</p>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => acknowledgeAnnouncement(announcement.id)}
-                  >
-                    <CheckCircle2 aria-hidden="true" />
-                    Acknowledge Announcement
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+        {announcement.attachments.length > 0 && (
+          <AttachmentPreview attachments={announcement.attachments} />
+        )}
 
         {canManageAnnouncements(employee) &&
           announcement.status === 'published' &&

@@ -9,17 +9,11 @@ import {
 import type { EmployeeProfile } from '../../types/auth'
 import { StatCard } from '../dashboard/StatCard'
 import { AnnouncementCard } from './AnnouncementCard'
-import { AnnouncementDetail } from './AnnouncementDetail'
 import { useAnnouncements } from './announcementsContext'
 import { CATEGORIES, PRIORITIES, PRIORITY_LABELS } from './types'
 import type { Announcement, AnnouncementPriority } from './types'
 
 type Tab = 'all' | 'pending' | 'acknowledged'
-
-interface Row {
-  announcement: Announcement
-  acknowledgedAt?: string
-}
 
 const TABS: { value: Tab; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -37,17 +31,13 @@ export function MyAcknowledgements({
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [priority, setPriority] = useState<'all' | AnnouncementPriority>('all')
-  const [selected, setSelected] = useState<Announcement | null>(null)
 
   const overview = getAcknowledgementOverview(employee.id)
 
-  const pendingRows: Row[] = overview.pending.map((announcement) => ({
-    announcement,
-  }))
-  const completedRows: Row[] = overview.completed.map((entry) => ({
-    announcement: entry.announcement,
-    acknowledgedAt: entry.acknowledgedAt,
-  }))
+  const pendingRows: Announcement[] = overview.pending
+  const completedRows: Announcement[] = overview.completed.map(
+    (entry) => entry.announcement,
+  )
 
   const baseRows =
     tab === 'pending'
@@ -58,28 +48,17 @@ export function MyAcknowledgements({
 
   const normalized = query.trim().toLowerCase()
   const rows = baseRows
-    .filter(
-      (row) => category === 'All' || row.announcement.category === category,
-    )
-    .filter(
-      (row) =>
-        priority === 'all' || row.announcement.priority === priority,
-    )
+    .filter((row) => category === 'All' || row.category === category)
+    .filter((row) => priority === 'all' || row.priority === priority)
     .filter(
       (row) =>
         normalized === '' ||
-        `${row.announcement.title} ${row.announcement.content}`
-          .toLowerCase()
-          .includes(normalized),
+        `${row.title} ${row.content}`.toLowerCase().includes(normalized),
     )
     .sort(
       (a, b) =>
-        new Date(
-          b.announcement.publishedAt ?? b.announcement.updatedAt,
-        ).getTime() -
-        new Date(
-          a.announcement.publishedAt ?? a.announcement.updatedAt,
-        ).getTime(),
+        new Date(b.publishedAt ?? b.updatedAt).getTime() -
+        new Date(a.publishedAt ?? a.updatedAt).getTime(),
     )
 
   const hasFilters =
@@ -205,11 +184,10 @@ export function MyAcknowledgements({
         <div className="feed-list">
           {rows.map((row) => (
             <AnnouncementCard
-              key={row.announcement.id}
-              announcement={row.announcement}
+              key={row.id}
+              announcement={row}
               employee={employee}
-              acknowledgedAt={row.acknowledgedAt}
-              onOpen={setSelected}
+              expandable
             />
           ))}
         </div>
@@ -220,12 +198,6 @@ export function MyAcknowledgements({
           <p>{emptyDescription}</p>
         </div>
       )}
-
-      <AnnouncementDetail
-        announcement={selected}
-        employee={employee}
-        onClose={() => setSelected(null)}
-      />
     </div>
   )
 }

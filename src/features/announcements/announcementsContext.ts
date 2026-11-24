@@ -1,7 +1,9 @@
 import { createContext, useContext } from 'react'
 import type {
+  AcknowledgeResult,
   Announcement,
   AnnouncementAcknowledgement,
+  AnnouncementAttachment,
   AnnouncementDraft,
   AnnouncementStatus,
 } from './types'
@@ -24,16 +26,18 @@ export interface AnnouncementsContextValue {
     draft: AnnouncementDraft,
     author: string,
     status?: AnnouncementStatus,
+    attachments?: AnnouncementAttachment[],
   ) => string
   updateAnnouncement: (
     id: string,
     draft: AnnouncementDraft,
     status?: AnnouncementStatus,
+    attachments?: AnnouncementAttachment[],
   ) => void
   publishAnnouncement: (id: string) => void
   archiveAnnouncement: (id: string) => void
   returnToDraft: (id: string) => void
-  acknowledgeAnnouncement: (announcementId: string) => void
+  acknowledgeAnnouncement: (announcementId: string) => AcknowledgeResult
   hasAcknowledged: (announcementId: string, employeeId: string) => boolean
   getAcknowledgementCount: (announcementId: string) => number
   getAcknowledgements: (

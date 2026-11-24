@@ -1,12 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, MapPin, ShieldX } from 'lucide-react'
 import { PlaceholderPage } from '../../components/layout/PlaceholderPage'
 import type { EmployeeProfile } from '../../types/auth'
 import { canManageAnnouncements } from '../../utils/roles'
 import { ALL_LOCATIONS } from '../locations/locationTypes'
 import { useLocations } from '../locations/locationsContext'
+import { AttachmentList } from './AttachmentList'
+import { AttachmentUploader } from './AttachmentUploader'
+import {
+  createAttachment,
+  isDuplicateAttachment,
+  MAX_ATTACHMENTS,
+  validateAttachmentFile,
+} from './attachmentUtils'
 import { useAnnouncements } from './announcementsContext'
-import type { Announcement, AnnouncementDraft } from './types'
+import type {
+  Announcement,
+  AnnouncementAttachment,
+  AnnouncementDraft,
+} from './types'
 import { CATEGORIES, PRIORITIES, PRIORITY_LABELS } from './types'
 
 const EMPTY_DRAFT: AnnouncementDraft = {
@@ -60,6 +72,28 @@ export function AnnouncementEditor({
   )
   const [errors, setErrors] = useState<EditorErrors>({})
   const [isSaving, setIsSaving] = useState(false)
+  const [attachments, setAttachments] = useState<AnnouncementAttachment[]>(
+    () => initial?.attachments ?? [],
+  )
+  const [attachmentErrors, setAttachmentErrors] = useState<string[]>([])
+  const sessionUrlsRef = useRef<Set<string>>(new Set())
+  const savedRef = useRef(false)
+
+  useEffect(() => {
+    const urls = sessionUrlsRef.current
+
+    return () => {
+      if (savedRef.current) {
+        return
+      }
+
+      for (const url of urls) {
+        URL.revokeObjectURL(url)
+      }
+
+      urls.clear()
+    }
+  }, [])
 
   if (!canManageAnnouncements(employee)) {
     return (
@@ -120,6 +154,63 @@ export function AnnouncementEditor({
     ...inactiveReferencedLocations,
   ]
 
+  const handleAddFiles = (files: File[]) => {
+    const errors: string[] = []
+    const additions: AnnouncementAttachment[] = []
+
+    for (const file of files) {
+      if (attachments.length + additions.length >= MAX_ATTACHMENTS) {
+        errors.push(`A maximum of ${MAX_ATTACHMENTS} attachments is allowed.`)
+        break
+      }
+
+      const validationError = validateAttachmentFile(file)
+
+      if (validationError) {
+        errors.push(validationError)
+        continue
+      }
+
+      if (
+        isDuplicateAttachment([...attachments, ...additions], file)
+      ) {
+        errors.push(`"${file.name}" is already attached.`)
+        continue
+      }
+
+      const attachment = createAttachment(
+        file,
+        employee.full_name,
+        initial?.id ?? '',
+      )
+
+      if (attachment.previewUrl) {
+        sessionUrlsRef.current.add(attachment.previewUrl)
+      }
+
+      additions.push(attachment)
+    }
+
+    if (additions.length > 0) {
+      setAttachments((current) => [...current, ...additions])
+    }
+
+    setAttachmentErrors(errors)
+  }
+
+  const handleRemoveAttachment = (id: string) => {
+    const target = attachments.find((attachment) => attachment.id === id)
+
+    if (target?.previewUrl && sessionUrlsRef.current.has(target.previewUrl)) {
+      URL.revokeObjectURL(target.previewUrl)
+      sessionUrlsRef.current.delete(target.previewUrl)
+    }
+
+    setAttachments((current) =>
+      current.filter((attachment) => attachment.id !== id),
+    )
+  }
+
   const submit = (status?: 'draft' | 'published') => {
     const nextErrors: EditorErrors = {}
 
@@ -144,11 +235,13 @@ export function AnnouncementEditor({
     setIsSaving(true)
 
     if (initial) {
-      updateAnnouncement(initial.id, form, status)
+      updateAnnouncement(initial.id, form, status, attachments)
     } else {
-      createAnnouncement(form, employee.full_name, status)
+      createAnnouncement(form, employee.full_name, status, attachments)
     }
 
+    savedRef.current = true
+    sessionUrlsRef.current.clear()
     setIsSaving(false)
     onSaved()
   }
@@ -241,6 +334,21 @@ export function AnnouncementEditor({
               </select>
             </div>
           </div>
+        </section>
+
+        <section className="editor-section">
+          <h2>Attachments</h2>
+          <AttachmentUploader
+            attachmentCount={attachments.length}
+            maxAttachments={MAX_ATTACHMENTS}
+            errors={attachmentErrors}
+            onAddFiles={handleAddFiles}
+            onDismissErrors={() => setAttachmentErrors([])}
+          />
+          <AttachmentList
+            attachments={attachments}
+            onRemove={handleRemoveAttachment}
+          />
         </section>
 
         <section className="editor-section">
