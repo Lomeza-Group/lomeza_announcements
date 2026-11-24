@@ -30,6 +30,16 @@ export function formatDate(iso: string): string {
   })
 }
 
+export function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('en-ZA', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export function getExcerpt(content: string, maxLength = 160): string {
   const normalized = content.replace(/\s+/g, ' ').trim()
 
@@ -38,12 +48,4 @@ export function getExcerpt(content: string, maxLength = 160): string {
   }
 
   return `${normalized.slice(0, maxLength).trimEnd()}…`
-}
-
-export function formatAudience(locations: string[]): string {
-  if (locations.length === 0 || locations.includes('All locations')) {
-    return 'All locations'
-  }
-
-  return locations.join(', ')
 }

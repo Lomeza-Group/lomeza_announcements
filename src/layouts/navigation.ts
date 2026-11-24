@@ -3,8 +3,10 @@ import {
   FilePlus2,
   FolderOpen,
   LayoutDashboard,
+  MapPin,
   Megaphone,
-  Settings,
+  ShieldCheck,
+  Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -15,6 +17,8 @@ export type AppView =
   | 'manage'
   | 'create'
   | 'administration'
+  | 'roles'
+  | 'locations'
 
 export interface NavItem {
   view: AppView
@@ -34,7 +38,9 @@ export const MANAGEMENT_NAV: NavItem[] = [
 ]
 
 export const ADMIN_NAV: NavItem[] = [
-  { view: 'administration', label: 'Administration', icon: Settings },
+  { view: 'administration', label: 'Employee Directory', icon: Users },
+  { view: 'roles', label: 'Role Management', icon: ShieldCheck },
+  { view: 'locations', label: 'Location Management', icon: MapPin },
 ]
 
 export const VIEW_TITLES: Record<AppView, string> = {
@@ -43,5 +49,7 @@ export const VIEW_TITLES: Record<AppView, string> = {
   acknowledgements: 'My Acknowledgements',
   manage: 'Manage Announcements',
   create: 'Create Announcement',
-  administration: 'Administration',
+  administration: 'Employee Directory',
+  roles: 'Role Management',
+  locations: 'Location Management',
 }

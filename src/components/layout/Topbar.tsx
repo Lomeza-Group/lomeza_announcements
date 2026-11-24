@@ -1,5 +1,6 @@
 import { Bell, MapPin, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import type { EmployeeProfile } from '../../types/auth'
+import { useLocations } from '../../features/locations/locationsContext'
 import { EmployeeMenu } from './EmployeeMenu'
 
 interface TopbarProps {
@@ -17,6 +18,10 @@ export function Topbar({
   onToggleCollapse,
   onToggleDrawer,
 }: TopbarProps) {
+  const { getLocationName } = useLocations()
+  const locationName =
+    getLocationName(employee.location_id) ?? employee.locationName
+
   return (
     <header className="topbar">
       <div className="topbar-left">
@@ -44,10 +49,10 @@ export function Topbar({
       </div>
 
       <div className="topbar-right">
-        {employee.locationName && (
+        {locationName && (
           <span className="topbar-location">
             <MapPin aria-hidden="true" />
-            {employee.locationName}
+            {locationName}
           </span>
         )}
         <button

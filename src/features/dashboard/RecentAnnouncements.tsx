@@ -1,14 +1,17 @@
 import { ArrowRight, Inbox } from 'lucide-react'
+import type { EmployeeProfile } from '../../types/auth'
 import { AnnouncementCard } from '../announcements/AnnouncementCard'
 import type { Announcement } from '../announcements/types'
 
 interface RecentAnnouncementsProps {
   announcements: Announcement[]
+  employee: EmployeeProfile
   onViewAll: () => void
 }
 
 export function RecentAnnouncements({
   announcements,
+  employee,
   onViewAll,
 }: RecentAnnouncementsProps) {
   return (
@@ -31,7 +34,11 @@ export function RecentAnnouncements({
       {announcements.length > 0 ? (
         <div className="recent-list">
           {announcements.map((announcement) => (
-            <AnnouncementCard key={announcement.id} announcement={announcement} />
+            <AnnouncementCard
+              key={announcement.id}
+              announcement={announcement}
+              employee={employee}
+            />
           ))}
         </div>
       ) : (

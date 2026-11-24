@@ -1,8 +1,25 @@
 import { createContext, useContext } from 'react'
-import type { Announcement, AnnouncementDraft, AnnouncementStatus } from './types'
+import type {
+  Announcement,
+  AnnouncementAcknowledgement,
+  AnnouncementDraft,
+  AnnouncementStatus,
+} from './types'
+
+export interface PersonalAcknowledgement {
+  announcement: Announcement
+  acknowledgedAt: string
+}
+
+export interface AcknowledgementOverview {
+  pending: Announcement[]
+  completed: PersonalAcknowledgement[]
+  total: number
+}
 
 export interface AnnouncementsContextValue {
   announcements: Announcement[]
+  acknowledgements: AnnouncementAcknowledgement[]
   createAnnouncement: (
     draft: AnnouncementDraft,
     author: string,
@@ -16,6 +33,14 @@ export interface AnnouncementsContextValue {
   publishAnnouncement: (id: string) => void
   archiveAnnouncement: (id: string) => void
   returnToDraft: (id: string) => void
+  acknowledgeAnnouncement: (announcementId: string) => void
+  hasAcknowledged: (announcementId: string, employeeId: string) => boolean
+  getAcknowledgementCount: (announcementId: string) => number
+  getAcknowledgements: (
+    announcementId: string,
+  ) => AnnouncementAcknowledgement[]
+  getPendingAcknowledgements: (employeeId: string) => Announcement[]
+  getAcknowledgementOverview: (employeeId: string) => AcknowledgementOverview
 }
 
 export const AnnouncementsContext =

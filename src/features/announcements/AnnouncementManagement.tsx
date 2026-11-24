@@ -13,8 +13,9 @@ import {
 } from 'lucide-react'
 import { PlaceholderPage } from '../../components/layout/PlaceholderPage'
 import type { EmployeeProfile } from '../../types/auth'
-import { formatAudience, formatDate } from '../../utils/format'
+import { formatDate } from '../../utils/format'
 import { canManageAnnouncements } from '../../utils/roles'
+import { useLocations } from '../locations/locationsContext'
 import { AnnouncementDetail } from './AnnouncementDetail'
 import { AnnouncementEditor } from './AnnouncementEditor'
 import { useAnnouncements } from './announcementsContext'
@@ -45,6 +46,7 @@ export function AnnouncementManagement({
     archiveAnnouncement,
     returnToDraft,
   } = useAnnouncements()
+  const { getAudienceLabel } = useLocations()
 
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<
@@ -245,7 +247,7 @@ export function AnnouncementManagement({
                   </span>
                   <span className="management-audience">
                     <MapPin aria-hidden="true" />
-                    {formatAudience(announcement.targetLocations)}
+                    {getAudienceLabel(announcement.targetLocations)}
                   </span>
                 </div>
 
@@ -342,6 +344,7 @@ export function AnnouncementManagement({
 
       <AnnouncementDetail
         announcement={viewing}
+        employee={employee}
         onClose={() => setViewing(null)}
       />
     </div>

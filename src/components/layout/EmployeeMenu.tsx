@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, LogOut, MapPin, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useLocations } from '../../features/locations/locationsContext'
 import type { EmployeeProfile } from '../../types/auth'
 import { formatRole, getInitials } from '../../utils/format'
 
 export function EmployeeMenu({ employee }: { employee: EmployeeProfile }) {
   const { logout } = useAuth()
+  const { getLocationName } = useLocations()
   const [open, setOpen] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +31,7 @@ export function EmployeeMenu({ employee }: { employee: EmployeeProfile }) {
   const roleLabel =
     employee.roleLabel ??
     (employee.roles[0] ? formatRole(employee.roles[0]) : 'Employee')
-  const location = employee.locationName
+  const location = getLocationName(employee.location_id) ?? employee.locationName
 
   const handleSignOut = async () => {
     setIsSigningOut(true)

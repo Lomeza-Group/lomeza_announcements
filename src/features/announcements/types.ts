@@ -31,6 +31,13 @@ export interface AnnouncementDraft {
   targetLocations: string[]
 }
 
+export interface AnnouncementAcknowledgement {
+  id: string
+  announcement_id: string
+  employee_id: string
+  first_opened_at: string
+}
+
 export const CATEGORIES = [
   'General',
   'Safety',
@@ -38,16 +45,6 @@ export const CATEGORIES = [
   'Human Resources',
   'IT',
   'Maintenance',
-] as const
-
-export const LOCATIONS = [
-  'All locations',
-  'Head Office',
-  'Princeton Office',
-  'Time Square Office',
-  'Devon',
-  'Kalagadi',
-  'Sundra',
 ] as const
 
 export const PRIORITIES: AnnouncementPriority[] = [

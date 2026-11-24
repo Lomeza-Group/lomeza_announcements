@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Inbox, Search } from 'lucide-react'
+import type { EmployeeProfile } from '../../types/auth'
+import { useEmployees } from '../employees/employeesContext'
+import { useLocations } from '../locations/locationsContext'
 import { AnnouncementCard } from './AnnouncementCard'
 import { AnnouncementDetail } from './AnnouncementDetail'
 import { useAnnouncements } from './announcementsContext'
@@ -11,18 +14,30 @@ const PRIORITY_FILTERS: ('all' | AnnouncementPriority)[] = [
   ...PRIORITIES,
 ]
 
-export function AnnouncementFeed() {
+export function AnnouncementFeed({
+  employee,
+}: {
+  employee: EmployeeProfile
+}) {
   const { announcements } = useAnnouncements()
+  const { getEmployeeById } = useEmployees()
+  const { isEmployeeTargeted } = useLocations()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [priority, setPriority] = useState<'all' | AnnouncementPriority>('all')
   const [selected, setSelected] = useState<Announcement | null>(null)
+
+  const currentLocationId =
+    getEmployeeById(employee.id)?.location_id ?? employee.location_id
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()
 
     return announcements
       .filter((announcement) => announcement.status === 'published')
+      .filter((announcement) =>
+        isEmployeeTargeted(announcement.targetLocations, currentLocationId),
+      )
       .filter(
         (announcement) =>
           category === 'All' || announcement.category === category,
@@ -43,7 +58,7 @@ export function AnnouncementFeed() {
           new Date(b.publishedAt ?? b.updatedAt).getTime() -
           new Date(a.publishedAt ?? a.updatedAt).getTime(),
       )
-  }, [announcements, query, category, priority])
+  }, [announcements, currentLocationId, query, category, priority, isEmployeeTargeted])
 
   return (
     <div>
@@ -98,6 +113,7 @@ export function AnnouncementFeed() {
             <AnnouncementCard
               key={announcement.id}
               announcement={announcement}
+              employee={employee}
               onOpen={setSelected}
             />
           ))}
@@ -112,6 +128,7 @@ export function AnnouncementFeed() {
 
       <AnnouncementDetail
         announcement={selected}
+        employee={employee}
         onClose={() => setSelected(null)}
       />
     </div>

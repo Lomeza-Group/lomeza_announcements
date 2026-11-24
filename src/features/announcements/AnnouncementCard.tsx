@@ -1,17 +1,43 @@
-import { CalendarDays, CheckCircle2, Info, MapPin, User } from 'lucide-react'
-import { formatAudience, formatDate, getExcerpt } from '../../utils/format'
+import {
+  AlertCircle,
+  CalendarDays,
+  CheckCircle2,
+  MapPin,
+  User,
+} from 'lucide-react'
+import type { EmployeeProfile } from '../../types/auth'
+import {
+  formatDate,
+  formatDateTime,
+  getExcerpt,
+} from '../../utils/format'
+import { useLocations } from '../locations/locationsContext'
+import { useAnnouncements } from './announcementsContext'
 import type { Announcement } from './types'
 import { PRIORITY_LABELS } from './types'
 
 interface AnnouncementCardProps {
   announcement: Announcement
+  employee: EmployeeProfile
+  acknowledgedAt?: string
   onOpen?: (announcement: Announcement) => void
 }
 
 export function AnnouncementCard({
   announcement,
+  employee,
+  acknowledgedAt,
   onOpen,
 }: AnnouncementCardProps) {
+  const { hasAcknowledged } = useAnnouncements()
+  const { getAudienceLabel } = useLocations()
+
+  const isPublished = announcement.status === 'published'
+  const acknowledged =
+    isPublished &&
+    announcement.acknowledgementEnabled &&
+    hasAcknowledged(announcement.id, employee.id)
+
   return (
     <article
       className={`announcement-card${
@@ -42,33 +68,46 @@ export function AnnouncementCard({
         </span>
         <span>
           <MapPin aria-hidden="true" />
-          {formatAudience(announcement.targetLocations)}
+          {getAudienceLabel(announcement.targetLocations)}
         </span>
       </div>
 
-      <div className="announcement-footer">
-        {announcement.acknowledgementEnabled ? (
-          <span className="ack-required">
-            <CheckCircle2 aria-hidden="true" />
-            Acknowledgement required
-          </span>
-        ) : (
-          <span className="ack-none">
-            <Info aria-hidden="true" />
-            No acknowledgement required
-          </span>
-        )}
+      {(isPublished && announcement.acknowledgementEnabled) || onOpen ? (
+        <div className="announcement-footer">
+          <div className="announcement-footer-left">
+            {isPublished &&
+              announcement.acknowledgementEnabled &&
+              (acknowledged ? (
+                <>
+                  <span className="ack-indicator is-acknowledged">
+                    <CheckCircle2 aria-hidden="true" />
+                    Acknowledged
+                  </span>
+                  {acknowledgedAt && (
+                    <span className="ack-date">
+                      {formatDateTime(acknowledgedAt)}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="ack-indicator is-pending">
+                  <AlertCircle aria-hidden="true" />
+                  Action required
+                </span>
+              ))}
+          </div>
 
-        {onOpen && (
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={() => onOpen(announcement)}
-          >
-            View
-          </button>
-        )}
-      </div>
+          {onOpen && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => onOpen(announcement)}
+            >
+              View
+            </button>
+          )}
+        </div>
+      ) : null}
     </article>
   )
 }

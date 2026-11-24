@@ -8,6 +8,8 @@ import type { AppView } from '../../layouts/navigation'
 import type { EmployeeProfile } from '../../types/auth'
 import { getFirstName } from '../../utils/format'
 import { useAnnouncements } from '../announcements/announcementsContext'
+import { useEmployees } from '../employees/employeesContext'
+import { useLocations } from '../locations/locationsContext'
 import { RecentAnnouncements } from './RecentAnnouncements'
 import { StatCard } from './StatCard'
 
@@ -32,9 +34,16 @@ interface DashboardProps {
 
 export function Dashboard({ employee, onNavigate }: DashboardProps) {
   const { announcements } = useAnnouncements()
+  const { getEmployeeById } = useEmployees()
+  const { isEmployeeTargeted } = useLocations()
+
+  const currentLocationId =
+    getEmployeeById(employee.id)?.location_id ?? employee.location_id
 
   const published = announcements.filter(
-    (announcement) => announcement.status === 'published',
+    (announcement) =>
+      announcement.status === 'published' &&
+      isEmployeeTargeted(announcement.targetLocations, currentLocationId),
   )
   const sorted = [...published].sort(
     (a, b) =>
@@ -100,6 +109,7 @@ export function Dashboard({ employee, onNavigate }: DashboardProps) {
 
       <RecentAnnouncements
         announcements={recent}
+        employee={employee}
         onViewAll={() => onNavigate('announcements')}
       />
     </div>

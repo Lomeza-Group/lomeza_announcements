@@ -3,9 +3,11 @@ import { Check, MapPin, ShieldX } from 'lucide-react'
 import { PlaceholderPage } from '../../components/layout/PlaceholderPage'
 import type { EmployeeProfile } from '../../types/auth'
 import { canManageAnnouncements } from '../../utils/roles'
+import { ALL_LOCATIONS } from '../locations/locationTypes'
+import { useLocations } from '../locations/locationsContext'
 import { useAnnouncements } from './announcementsContext'
 import type { Announcement, AnnouncementDraft } from './types'
-import { CATEGORIES, LOCATIONS, PRIORITIES, PRIORITY_LABELS } from './types'
+import { CATEGORIES, PRIORITIES, PRIORITY_LABELS } from './types'
 
 const EMPTY_DRAFT: AnnouncementDraft = {
   title: '',
@@ -51,6 +53,7 @@ export function AnnouncementEditor({
   onSaved,
 }: AnnouncementEditorProps) {
   const { createAnnouncement, updateAnnouncement } = useAnnouncements()
+  const { getActiveLocations, getLocationName } = useLocations()
 
   const [form, setForm] = useState<AnnouncementDraft>(() =>
     initial ? toDraft(initial) : EMPTY_DRAFT,
@@ -77,25 +80,45 @@ export function AnnouncementEditor({
     setForm((current) => ({ ...current, [key]: value }))
   }
 
-  const toggleLocation = (location: string) => {
+  const toggleLocation = (locationId: string) => {
     setForm((current) => {
       let locations = current.targetLocations
 
-      if (location === 'All locations') {
-        locations = locations.includes('All locations')
-          ? []
-          : ['All locations']
+      if (locationId === ALL_LOCATIONS) {
+        locations = locations.includes(ALL_LOCATIONS) ? [] : [ALL_LOCATIONS]
       } else {
-        const withoutAll = locations.filter((item) => item !== 'All locations')
-        locations = withoutAll.includes(location)
-          ? withoutAll.filter((item) => item !== location)
-          : [...withoutAll, location]
+        const withoutAll = locations.filter((item) => item !== ALL_LOCATIONS)
+        locations = withoutAll.includes(locationId)
+          ? withoutAll.filter((item) => item !== locationId)
+          : [...withoutAll, locationId]
       }
 
       return { ...current, targetLocations: locations }
     })
     setErrors((current) => ({ ...current, targetLocations: undefined }))
   }
+
+  const activeLocations = getActiveLocations()
+  const activeLocationIds = new Set(
+    activeLocations.map((location) => location.id),
+  )
+  const inactiveReferencedLocations = form.targetLocations
+    .filter(
+      (id) => id !== ALL_LOCATIONS && !activeLocationIds.has(id),
+    )
+    .map((id) => ({
+      id,
+      name: getLocationName(id) ?? id,
+      inactive: true,
+    }))
+  const targetOptions = [
+    ...activeLocations.map((location) => ({
+      id: location.id,
+      name: location.name,
+      inactive: false,
+    })),
+    ...inactiveReferencedLocations,
+  ]
 
   const submit = (status?: 'draft' | 'published') => {
     const nextErrors: EditorErrors = {}
@@ -225,19 +248,41 @@ export function AnnouncementEditor({
           <p className="editor-hint">Select one or more locations.</p>
 
           <div className="location-options">
-            {LOCATIONS.map((location) => {
-              const selected = form.targetLocations.includes(location)
+            <button
+              type="button"
+              className={`location-option${
+                form.targetLocations.includes(ALL_LOCATIONS)
+                  ? ' is-selected'
+                  : ''
+              }`}
+              onClick={() => toggleLocation(ALL_LOCATIONS)}
+              aria-pressed={form.targetLocations.includes(ALL_LOCATIONS)}
+            >
+              <MapPin aria-hidden="true" />
+              <span>All locations</span>
+              {form.targetLocations.includes(ALL_LOCATIONS) && (
+                <Check aria-hidden="true" />
+              )}
+            </button>
+
+            {targetOptions.map((option) => {
+              const selected = form.targetLocations.includes(option.id)
 
               return (
                 <button
-                  key={location}
+                  key={option.id}
                   type="button"
-                  className={`location-option${selected ? ' is-selected' : ''}`}
-                  onClick={() => toggleLocation(location)}
+                  className={`location-option${
+                    selected ? ' is-selected' : ''
+                  }`}
+                  onClick={() => toggleLocation(option.id)}
                   aria-pressed={selected}
                 >
                   <MapPin aria-hidden="true" />
-                  <span>{location}</span>
+                  <span>
+                    {option.name}
+                    {option.inactive ? ' (inactive)' : ''}
+                  </span>
                   {selected && <Check aria-hidden="true" />}
                 </button>
               )
