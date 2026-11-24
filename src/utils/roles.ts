@@ -22,3 +22,10 @@ export function canManageAnnouncements(employee: EmployeeProfile): boolean {
 export function canAccessAdministration(employee: EmployeeProfile): boolean {
   return hasAnyRole(employee, ['administrator', 'super_administrator'])
 }
+
+export function canAccessEmployeeOverview(employee: EmployeeProfile): boolean {
+  return (
+    hasRole(employee, 'administrator') &&
+    !hasRole(employee, 'super_administrator')
+  )
+}
