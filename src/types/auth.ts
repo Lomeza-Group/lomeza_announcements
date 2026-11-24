@@ -8,6 +8,13 @@ export interface EmployeeProfile {
   location_id: string | null
   is_active: boolean
   roles: string[]
+  locationName?: string
+  roleLabel?: string
+}
+
+export interface DemoEmployee extends EmployeeProfile {
+  locationName: string
+  roleLabel: string
 }
 
 export interface AuthContextValue {
@@ -22,6 +29,9 @@ export interface AuthContextValue {
   profileError: string | null
   mustChangePassword: boolean
   isPasswordRecovery: boolean
+  isDemoMode?: boolean
+  demoEmployees?: DemoEmployee[]
+  demoSignIn?: (employee: DemoEmployee) => void
   login: (email: string, password: string) => Promise<string | null>
   logout: () => Promise<string | null>
   changePassword: (newPassword: string) => Promise<string | null>

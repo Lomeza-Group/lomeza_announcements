@@ -1,9 +1,12 @@
 import { AccessState, LoadingScreen } from './components/auth/AccessState'
-import { AuthenticatedHome } from './components/auth/AuthenticatedHome'
 import { AuthProvider } from './components/auth/AuthProvider'
 import { ChangePassword } from './components/auth/ChangePassword'
+import { DemoAuthProvider } from './components/auth/DemoAuthProvider'
+import { DemoLogin } from './components/auth/DemoLogin'
 import { Login } from './components/auth/Login'
+import { isDemoModeEnabled } from './features/demo/demoMode'
 import { useAuth } from './hooks/useAuth'
+import { AppLayout } from './layouts/AppLayout'
 
 function AppContent() {
   const {
@@ -13,8 +16,17 @@ function AppContent() {
     profileError,
     mustChangePassword,
     isPasswordRecovery,
+    isDemoMode,
     retryProfile,
   } = useAuth()
+
+  if (isDemoMode) {
+    return employee ? (
+      <AppLayout employee={employee} />
+    ) : (
+      <DemoLogin />
+    )
+  }
 
   if (!session) {
     return isLoading ? <LoadingScreen /> : <Login />
@@ -62,10 +74,18 @@ function AppContent() {
     )
   }
 
-  return <AuthenticatedHome employee={employee} />
+  return <AppLayout employee={employee} />
 }
 
 export default function App() {
+  if (isDemoModeEnabled) {
+    return (
+      <DemoAuthProvider>
+        <AppContent />
+      </DemoAuthProvider>
+    )
+  }
+
   return (
     <AuthProvider>
       <AppContent />

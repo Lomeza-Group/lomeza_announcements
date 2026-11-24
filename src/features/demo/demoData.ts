@@ -1,0 +1,48 @@
+import type { DemoEmployee } from '../../types/auth'
+
+export const demoEmployees: DemoEmployee[] = [
+  {
+    id: 'demo-super-admin',
+    employee_number: 'LMS-1001',
+    full_name: 'Joohyeon Stemmer',
+    company_email: 'joohyeon.stemmer@lomeza.co.za',
+    location_id: 'demo-time-square-office',
+    is_active: true,
+    roles: ['super_administrator'],
+    locationName: 'Time Square Office',
+    roleLabel: 'Super Administrator',
+  },
+  {
+    id: 'demo-publisher',
+    employee_number: 'LMS-1002',
+    full_name: 'Thabo Nkosi',
+    company_email: 'publisher@lomeza.co.za',
+    location_id: 'demo-head-office',
+    is_active: true,
+    roles: ['publisher'],
+    locationName: 'Head Office',
+    roleLabel: 'Publisher',
+  },
+  {
+    id: 'demo-employee',
+    employee_number: 'LMS-1003',
+    full_name: 'Sarah van Wyk',
+    company_email: 'employee@lomeza.co.za',
+    location_id: 'demo-devon',
+    is_active: true,
+    roles: ['employee'],
+    locationName: 'Devon',
+    roleLabel: 'Employee',
+  },
+  {
+    id: 'demo-employee-kalagadi',
+    employee_number: 'LMS-1004',
+    full_name: 'Naledi Mokoena',
+    company_email: 'naledi.mokoena@lomeza.co.za',
+    location_id: 'demo-kalagadi',
+    is_active: true,
+    roles: ['employee'],
+    locationName: 'Kalagadi',
+    roleLabel: 'Employee',
+  },
+]
