@@ -7,6 +7,54 @@ export interface AcknowledgeResult {
   error: string | null
 }
 
+export type PollResultsVisibility = 'after_vote' | 'after_close'
+
+export interface PollOption {
+  id: string
+  label: string
+  order: number
+}
+
+export interface PollResponse {
+  id: string
+  pollId: string
+  employeeId: string
+  selectedOptionIds: string[]
+  submittedAt: string
+}
+
+export interface AnnouncementPoll {
+  id: string
+  question: string
+  options: PollOption[]
+  allowMultiple: boolean
+  allowVoteChanges: boolean
+  closesAt: string | null
+  resultsVisibility: PollResultsVisibility
+  responses: PollResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PollOptionDraft {
+  id?: string
+  label: string
+}
+
+export interface PollDraft {
+  question: string
+  options: PollOptionDraft[]
+  allowMultiple: boolean
+  allowVoteChanges: boolean
+  closesAt: string | null
+  resultsVisibility: PollResultsVisibility
+}
+
+export interface PollVoteResult {
+  success: boolean
+  error: string | null
+}
+
 export interface AnnouncementAttachment {
   id: string
   announcementId: string
@@ -41,6 +89,7 @@ export interface Announcement {
   coverImageAlt: string | null
   coverImageFile?: File | null
   coverImagePreviewUrl?: string | null
+  poll?: AnnouncementPoll | null
 }
 
 export type AnnouncementSeed = Omit<
@@ -61,6 +110,7 @@ export interface AnnouncementDraft {
   coverImageAlt?: string | null
   coverImageFile?: File | null
   coverImagePreviewUrl?: string | null
+  poll?: PollDraft | null
 }
 
 export interface AnnouncementAcknowledgement {

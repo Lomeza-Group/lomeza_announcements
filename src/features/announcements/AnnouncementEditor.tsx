@@ -15,11 +15,18 @@ import {
 } from './attachmentUtils'
 import { CoverImageUploader } from './CoverImageUploader'
 import { validateCoverFile } from './coverImage'
+import { PollEditor } from './PollEditor'
+import {
+  createEmptyPollDraft,
+  toPollDraft,
+  validatePollDraft,
+} from './pollUtils'
 import { useAnnouncements } from './announcementsContext'
 import type {
   Announcement,
   AnnouncementAttachment,
   AnnouncementDraft,
+  PollDraft,
 } from './types'
 import { CATEGORIES, PRIORITIES, PRIORITY_LABELS } from './types'
 
@@ -91,6 +98,14 @@ export function AnnouncementEditor({
     string | null
   >(initial?.coverImagePreviewUrl ?? null)
   const [coverError, setCoverError] = useState<string | null>(null)
+  const [pollEnabled, setPollEnabled] = useState(Boolean(initial?.poll))
+  const [pollDraft, setPollDraft] = useState<PollDraft>(() =>
+    initial?.poll ? toPollDraft(initial.poll) : createEmptyPollDraft(),
+  )
+  const [pollErrors, setPollErrors] = useState<string[]>([])
+  const pollLocked = Boolean(
+    initial?.poll && initial.poll.responses.length > 0,
+  )
   const sessionUrlsRef = useRef<Set<string>>(new Set())
   const savedRef = useRef(false)
 
@@ -266,6 +281,20 @@ export function AnnouncementEditor({
     setCoverError(null)
   }
 
+  const handlePollEnabledChange = (enabled: boolean) => {
+    if (!enabled && pollLocked) {
+      return
+    }
+
+    setPollEnabled(enabled)
+    setPollErrors([])
+  }
+
+  const handlePollChange = (next: PollDraft) => {
+    setPollDraft(next)
+    setPollErrors([])
+  }
+
   const submit = (status?: 'draft' | 'published') => {
     const nextErrors: EditorErrors = {}
 
@@ -281,12 +310,23 @@ export function AnnouncementEditor({
       nextErrors.targetLocations = 'Select at least one target audience before publishing.'
     }
 
-    if (nextErrors.title || nextErrors.content || nextErrors.targetLocations) {
+    const pollValidation = pollEnabled
+      ? validatePollDraft(pollDraft)
+      : { valid: true, errors: [] as string[] }
+
+    if (
+      nextErrors.title ||
+      nextErrors.content ||
+      nextErrors.targetLocations ||
+      !pollValidation.valid
+    ) {
       setErrors(nextErrors)
+      setPollErrors(pollValidation.errors)
       return
     }
 
     setErrors({})
+    setPollErrors([])
     setIsSaving(true)
 
     const draft: AnnouncementDraft = {
@@ -295,6 +335,7 @@ export function AnnouncementEditor({
       coverImageAlt: coverImageAlt.trim() || null,
       coverImageFile,
       coverImagePreviewUrl,
+      poll: pollEnabled ? pollDraft : null,
     }
 
     if (initial) {
@@ -423,6 +464,18 @@ export function AnnouncementEditor({
           <AttachmentList
             attachments={attachments}
             onRemove={handleRemoveAttachment}
+          />
+        </section>
+
+        <section className="editor-section">
+          <h2>Poll</h2>
+          <PollEditor
+            enabled={pollEnabled}
+            locked={pollLocked}
+            poll={pollDraft}
+            errors={pollErrors}
+            onEnabledChange={handlePollEnabledChange}
+            onChange={handlePollChange}
           />
         </section>
 

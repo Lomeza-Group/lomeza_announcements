@@ -6,6 +6,7 @@ import type {
   AnnouncementAttachment,
   AnnouncementDraft,
   AnnouncementStatus,
+  PollVoteResult,
 } from './types'
 
 export interface PersonalAcknowledgement {
@@ -45,6 +46,10 @@ export interface AnnouncementsContextValue {
   ) => AnnouncementAcknowledgement[]
   getPendingAcknowledgements: (employeeId: string) => Announcement[]
   getAcknowledgementOverview: (employeeId: string) => AcknowledgementOverview
+  castPollVote: (
+    announcementId: string,
+    selectedOptionIds: string[],
+  ) => PollVoteResult
 }
 
 export const AnnouncementsContext =

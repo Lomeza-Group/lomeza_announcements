@@ -6,6 +6,7 @@ import { canManageAnnouncements } from '../../utils/roles'
 import { useLocations } from '../locations/locationsContext'
 import { AcknowledgementTracking } from './AcknowledgementTracking'
 import { AttachmentPreview } from './AttachmentPreview'
+import { PollBlock } from './PollBlock'
 import { StatusBadge } from './StatusBadge'
 import type { Announcement } from './types'
 import { PRIORITY_LABELS } from './types'
@@ -96,6 +97,14 @@ export function AnnouncementDetail({
 
         {announcement.attachments.length > 0 && (
           <AttachmentPreview attachments={announcement.attachments} />
+        )}
+
+        {announcement.poll && canManageAnnouncements(employee) && (
+          <PollBlock
+            announcement={announcement}
+            employee={employee}
+            resultsOnly
+          />
         )}
 
         {canManageAnnouncements(employee) &&

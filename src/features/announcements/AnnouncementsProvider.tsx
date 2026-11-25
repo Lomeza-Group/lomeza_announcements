@@ -11,6 +11,13 @@ import type {
 } from './announcementsContext'
 import { mockAcknowledgements } from './mockAcknowledgements'
 import { mockAnnouncements } from './mockAnnouncements'
+import {
+  buildPollFromDraft,
+  generatePollResponseId,
+  normalizePollClosesAt,
+  validatePollDraft,
+  validatePollVote,
+} from './pollUtils'
 import { isExpired } from './targeting'
 import type {
   AcknowledgeResult,
@@ -19,6 +26,7 @@ import type {
   AnnouncementAttachment,
   AnnouncementDraft,
   AnnouncementStatus,
+  PollVoteResult,
 } from './types'
 
 function generateId(prefix: string): string {
@@ -42,6 +50,7 @@ export function AnnouncementsProvider({
       ...announcement,
       attachments: [],
       coverImageFile: null,
+      poll: announcement.poll ?? null,
     })),
   )
   const [acknowledgements, setAcknowledgements] = useState<
@@ -65,6 +74,14 @@ export function AnnouncementsProvider({
       const now = new Date().toISOString()
       const id = generateId('ann')
 
+      const pollValidation = draft.poll
+        ? validatePollDraft(draft.poll)
+        : null
+      const poll =
+        draft.poll && pollValidation?.valid
+          ? buildPollFromDraft(draft.poll, null, now)
+          : null
+
       const announcement: Announcement = {
         ...draft,
         id,
@@ -82,6 +99,7 @@ export function AnnouncementsProvider({
         coverImageAlt: draft.coverImageAlt ?? null,
         coverImageFile: draft.coverImageFile ?? null,
         coverImagePreviewUrl: draft.coverImagePreviewUrl ?? null,
+        poll,
       }
 
       setAnnouncements((current) => [announcement, ...current])
@@ -136,6 +154,27 @@ export function AnnouncementsProvider({
         }
       }
 
+      const currentPoll = currentAnnouncement?.poll ?? null
+      let nextPoll = currentPoll
+
+      if (draft.poll === null) {
+        nextPoll =
+          currentPoll && currentPoll.responses.length > 0
+            ? currentPoll
+            : null
+      } else if (draft.poll !== undefined) {
+        if (currentPoll && currentPoll.responses.length > 0) {
+          const closesAt = normalizePollClosesAt(draft.poll.closesAt)
+
+          nextPoll =
+            currentPoll.resultsVisibility === 'after_close' && !closesAt
+              ? currentPoll
+              : { ...currentPoll, closesAt, updatedAt: now }
+        } else if (validatePollDraft(draft.poll).valid) {
+          nextPoll = buildPollFromDraft(draft.poll, currentPoll, now)
+        }
+      }
+
       setAnnouncements((current) =>
         current.map((announcement) => {
           if (announcement.id !== id) {
@@ -170,6 +209,7 @@ export function AnnouncementsProvider({
               draft.coverImagePreviewUrl !== undefined
                 ? draft.coverImagePreviewUrl
                 : (announcement.coverImagePreviewUrl ?? null),
+            poll: nextPoll,
           }
         }),
       )
@@ -198,6 +238,111 @@ export function AnnouncementsProvider({
       }
     }
   }, [])
+
+  const castPollVote = useCallback(
+    (
+      announcementId: string,
+      selectedOptionIds: string[],
+    ): PollVoteResult => {
+      const announcement = announcements.find(
+        (item) => item.id === announcementId,
+      )
+
+      if (!announcement) {
+        return { success: false, error: 'Announcement not found.' }
+      }
+
+      if (announcement.status !== 'published') {
+        return {
+          success: false,
+          error: 'Voting is only available on published announcements.',
+        }
+      }
+
+      if (!announcement.poll) {
+        return {
+          success: false,
+          error: 'This announcement does not have a poll.',
+        }
+      }
+
+      if (
+        !isEmployeeTargeted(
+          announcement.targetLocations,
+          resolveEmployeeLocationId(employee.id),
+        )
+      ) {
+        return {
+          success: false,
+          error: 'You do not have access to vote on this poll.',
+        }
+      }
+
+      const uniqueOptionIds = Array.from(new Set(selectedOptionIds))
+      const validationError = validatePollVote(
+        announcement.poll,
+        employee.id,
+        uniqueOptionIds,
+      )
+
+      if (validationError) {
+        return { success: false, error: validationError }
+      }
+
+      const now = new Date().toISOString()
+
+      setAnnouncements((current) =>
+        current.map((item) => {
+          if (item.id !== announcementId || !item.poll) {
+            return item
+          }
+
+          const existingResponse = item.poll.responses.find(
+            (response) => response.employeeId === employee.id,
+          )
+
+          if (existingResponse && !item.poll.allowVoteChanges) {
+            return item
+          }
+
+          const responses = existingResponse
+            ? item.poll.responses.map((response) =>
+                response.employeeId === employee.id
+                  ? {
+                      ...response,
+                      selectedOptionIds: uniqueOptionIds,
+                      submittedAt: now,
+                    }
+                  : response,
+              )
+            : [
+                ...item.poll.responses,
+                {
+                  id: generatePollResponseId(),
+                  pollId: item.poll.id,
+                  employeeId: employee.id,
+                  selectedOptionIds: uniqueOptionIds,
+                  submittedAt: now,
+                },
+              ]
+
+          return {
+            ...item,
+            poll: { ...item.poll, responses, updatedAt: now },
+            updatedAt: now,
+          }
+        }),
+      )
+
+      return { success: true, error: null }
+    },
+    [
+      announcements,
+      employee,
+      resolveEmployeeLocationId,
+      isEmployeeTargeted,
+    ],
+  )
 
   const publishAnnouncement = useCallback((id: string) => {
     const now = new Date().toISOString()
@@ -427,6 +572,7 @@ export function AnnouncementsProvider({
       getAcknowledgements,
       getPendingAcknowledgements,
       getAcknowledgementOverview,
+      castPollVote,
     }),
     [
       announcements,
@@ -442,6 +588,7 @@ export function AnnouncementsProvider({
       getAcknowledgements,
       getPendingAcknowledgements,
       getAcknowledgementOverview,
+      castPollVote,
     ],
   )
 

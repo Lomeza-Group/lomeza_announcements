@@ -18,6 +18,7 @@ import {
 import { useLocations } from '../locations/locationsContext'
 import { AnnouncementCover } from './AnnouncementCover'
 import { AttachmentPreview } from './AttachmentPreview'
+import { PollBlock } from './PollBlock'
 import { useAnnouncements } from './announcementsContext'
 import type { Announcement } from './types'
 import { PRIORITY_LABELS } from './types'
@@ -134,6 +135,10 @@ export function AnnouncementCard({
 
           {announcement.attachments.length > 0 && (
             <AttachmentPreview attachments={announcement.attachments} />
+          )}
+
+          {announcement.poll && (
+            <PollBlock announcement={announcement} employee={employee} />
           )}
 
           {ackError && (
