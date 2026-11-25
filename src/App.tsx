@@ -1,5 +1,5 @@
+import { lazy, Suspense } from 'react'
 import { AccessState, LoadingScreen } from './components/auth/AccessState'
-import { AuthProvider } from './components/auth/AuthProvider'
 import { ChangePassword } from './components/auth/ChangePassword'
 import { DemoAuthProvider } from './components/auth/DemoAuthProvider'
 import { DemoLogin } from './components/auth/DemoLogin'
@@ -7,6 +7,12 @@ import { Login } from './components/auth/Login'
 import { isDemoModeEnabled } from './features/demo/demoMode'
 import { useAuth } from './hooks/useAuth'
 import { AppLayout } from './layouts/AppLayout'
+
+const AuthProvider = lazy(() =>
+  import('./components/auth/AuthProvider').then((module) => ({
+    default: module.AuthProvider,
+  })),
+)
 
 function AppContent() {
   const {
@@ -87,8 +93,10 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Suspense fallback={<LoadingScreen />}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Suspense>
   )
 }
